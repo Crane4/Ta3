@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "سامر",
+    "slug": "samer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "newArchEnabled": false,
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.samer.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "سامر يحتاج إلى الوصول للكاميرا لاكتشاف حوادث الطرق ومراقبة سلوك القيادة.",
+        "NSLocationWhenInUseUsageDescription": "سامر يحتاج إلى الوصول للموقع لإرسال تنبيهات الطوارئ الدقيقة مع موقعك.",
+        "NSLocationAlwaysUsageDescription": "سامر يحتاج إلى الوصول للموقع لإرسال تنبيهات الطوارئ الدقيقة مع موقعك."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "com.samer.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "السماح لسامر بالوصول للكاميرا لاكتشاف الحوادث ومراقبة سلوك القيادة."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "السماح لسامر بالوصول للموقع لإرسال تنبيهات الطوارئ الدقيقة."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#ff0000"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}
+

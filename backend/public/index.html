@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم سامر - SAMER Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #ffa500;
+        }
+
+        .subtitle {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card.critical {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+
+        .stat-card.warning {
+            border-color: #ffa500;
+            background: rgba(255, 165, 0, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #ffa500;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .incidents-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #ffa500;
+        }
+
+        .refresh-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+
+        .incidents-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .incident-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-right: 4px solid;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .incident-card:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .incident-card.critical {
+            border-color: #ff6b6b;
+        }
+
+        .incident-card.warning {
+            border-color: #ffa500;
+        }
+
+        .incident-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .incident-indicator.critical {
+            background-color: #ff0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+        }
+
+        .incident-indicator.warning {
+            background-color: #ffa500;
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.6);
+        }
+
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .incident-type {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ffa500;
+        }
+
+        .incident-time {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .incident-message {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .incident-location {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .incident-id {
+            font-size: 0.8em;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+
+        .no-incidents {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.7;
+            font-size: 1.2em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.active {
+            background: #4caf50;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 165, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 165, 0, 0.7);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .section-title {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚨 لوحة تحكم سامر</h1>
+            <p class="subtitle">مراقبة الحوادث والسلوكيات الخطرة في الوقت الفعلي</p>
+            <p class="subtitle">
+                الحالة: <span class="status-indicator active"></span> متصل
+            </p>
+        </header>
+
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be loaded here -->
+        </div>
+
+        <div class="incidents-section">
+            <div class="section-header">
+                <h2 class="section-title">الحوادث المستلمة</h2>
+                <button class="refresh-btn" onclick="loadIncidents()">🔄 تحديث</button>
+            </div>
+            <div class="incidents-list" id="incidentsList">
+                <div class="no-incidents">جاري التحميل...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    const statsGrid = document.getElementById('statsGrid');
+                    
+                    statsGrid.innerHTML = `
+                        <div class="stat-card critical">
+                            <div class="stat-label">إجمالي الحوادث</div>
+                            <div class="stat-value">${stats.total}</div>
+                        </div>
+                        <div class="stat-card critical">
+                            <div class="stat-label">حوادث مرورية</div>
+                            <div class="stat-value">${stats.accidents}</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">خروج عن المسار</div>
+                            <div class="stat-value">${stats.laneDepartures}</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">توقف غير طبيعي</div>
+                            <div class="stat-value">${stats.abnormalStopping}</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">قيادة مشتتة</div>
+                            <div class="stat-value">${stats.distractedDriving}</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">قيادة نعسانة</div>
+                            <div class="stat-value">${stats.drowsyDriving}</div>
+                        </div>
+                        <div class="stat-card critical">
+                            <div class="stat-label">حرجة</div>
+                            <div class="stat-value">${stats.critical}</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">تحذيرات</div>
+                            <div class="stat-value">${stats.warning}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load incidents
+        async function loadIncidents() {
+            try {
+                const response = await fetch(`${API_URL}/api/incidents`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const incidentsList = document.getElementById('incidentsList');
+                    
+                    if (data.incidents.length === 0) {
+                        incidentsList.innerHTML = '<div class="no-incidents">لا توجد حوادث مستلمة حتى الآن</div>';
+                        return;
+                    }
+                    
+                    incidentsList.innerHTML = data.incidents.map(incident => {
+                        const date = new Date(incident.timestamp);
+                        const timeStr = date.toLocaleString('ar-SA', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        
+                        const severityClass = incident.severity === 'critical' ? 'critical' : 'warning';
+                        const typeLabels = {
+                            'accident': '🚨 حادث مروري',
+                            'lane_departure': '⚠️ خروج عن المسار',
+                            'abnormal_stopping': '⚠️ توقف غير طبيعي',
+                            'distracted_driving': '⚠️ قيادة مشتتة',
+                            'drowsy_driving': '⚠️ قيادة نعسانة'
+                        };
+                        
+                        const typeLabel = typeLabels[incident.type] || incident.type;
+                        
+                        return `
+                            <div class="incident-card ${severityClass}">
+                                <div class="incident-indicator ${severityClass}"></div>
+                                <div class="incident-header">
+                                    <div class="incident-type">${typeLabel}</div>
+                                    <div class="incident-time">${timeStr}</div>
+                                </div>
+                                <div class="incident-message">${incident.message || 'لا توجد رسالة'}</div>
+                                ${incident.location ? `
+                                    <div class="incident-location">
+                                        📍 الموقع: ${incident.location.latitude.toFixed(6)}, ${incident.location.longitude.toFixed(6)}
+                                    </div>
+                                ` : ''}
+                                <div class="incident-id">ID: ${incident.id}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading incidents:', error);
+                document.getElementById('incidentsList').innerHTML = 
+                    '<div class="no-incidents">خطأ في تحميل البيانات</div>';
+            }
+        }
+
+        // Auto-refresh every 3 seconds
+        setInterval(() => {
+            loadStats();
+            loadIncidents();
+        }, 3000);
+
+        // Initial load
+        loadStats();
+        loadIncidents();
+    </script>
+</body>
+</html>
+
