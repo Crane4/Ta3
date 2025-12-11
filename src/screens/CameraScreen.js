@@ -691,6 +691,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   fpsContainer: {
     flexDirection: 'row',
@@ -783,6 +785,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   statsContainer: {
     position: 'absolute',
@@ -828,10 +832,13 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 11,
     fontWeight: '600',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   controls: {
     padding: 20,
-    paddingBottom: 35,
+    paddingBottom: 15,
+    paddingTop: 2
   },
   controlButton: {
     borderRadius: 25,
@@ -878,12 +885,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   errorText: {
     color: '#fff',
     fontSize: 18,
-    textAlign: 'center',
+    textAlign: 'right',
     marginBottom: 20,
+    writingDirection: 'rtl',
   },
   button: {
     backgroundColor: '#4caf50',
@@ -895,16 +905,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   logsContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 90,
     left: 12,
     right: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
     borderRadius: 16,
-    padding: 12,
-    maxHeight: 150,
+    padding: 10,
+    maxHeight: 120,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#000',
@@ -940,6 +952,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
     textAlign: 'right',
+    writingDirection: 'rtl',
   },
   logsScroll: {
     maxHeight: 120,
@@ -951,6 +964,8 @@ const styles = StyleSheet.create({
   emptyLogsText: {
     color: 'rgba(255, 255, 255, 0.5)',
     fontSize: 11,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   logItem: {
     flexDirection: 'row',
@@ -980,6 +995,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#fff',
     fontWeight: '500',
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   logInfoContainer: {
     backgroundColor: 'rgba(76, 175, 80, 0.15)',
@@ -1031,6 +1048,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 6,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   vehicleBox: {
     position: 'absolute',

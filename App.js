@@ -16,9 +16,11 @@ const Tab = createBottomTabNavigator();
 export default function App() {
   useEffect(() => {
     // Enable RTL for Arabic
-    if (!I18nManager.isRTL) {
-      I18nManager.forceRTL(true);
-      I18nManager.allowRTL(true);
+    I18nManager.forceRTL(true);
+    I18nManager.allowRTL(true);
+    // Force RTL layout direction
+    if (Platform.OS === 'android') {
+      I18nManager.swapLeftAndRightInRTL(true);
     }
   }, []);
 
@@ -44,7 +46,7 @@ export default function App() {
               shadowRadius: 8,
             },
             tabBarShowLabel: false,
-            tabBarActiveTintColor: '#0066CC',
+            tabBarActiveTintColor: '#ffa500',
             tabBarInactiveTintColor: '#999',
           }}
         >
@@ -131,14 +133,14 @@ const TabIcon = ({ iconName, iconNameOutline, color, focused }) => {
         borderRadius: 21,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: focused ? '#E3F2FD' : 'transparent',
+        backgroundColor: focused ? '#FFF3E0' : 'transparent',
         opacity: opacityAnim,
       }}
     >
       <Ionicons 
         name={focused ? iconName : iconNameOutline} 
         size={24} 
-        color={focused ? "#0066CC" : "#999"} 
+        color={focused ? "#ffa500" : "#999"} 
       />
     </Animated.View>
   );
