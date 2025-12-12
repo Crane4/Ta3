@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { sendIncidentViaWS, isSocketConnected, initSocket } from './socketService';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -42,6 +43,7 @@ export const sendEmergencyAlert = async (incident) => {
       location: incident.location,
       timestamp: incident.timestamp,
       severity: incident.severity,
+      image: incident.image, // Include image if available
     };
 
     // Send local notification (this works for real)
@@ -56,23 +58,31 @@ export const sendEmergencyAlert = async (incident) => {
       trigger: null, // Send immediately
     });
 
-    // In production, this would send to:
-    // 1. Emergency services API
-    // 2. Local authorities
-    // 3. Nearby emergency responders
-    // 4. Hospital/ambulance services
-    
-    // Simulated API call
+    // Ensure socket is initialized (idempotent)
+    if (!isSocketConnected()) {
+      initSocket();
+    }
+
+    // Try sending via WebSocket first (faster, real-time)
+    let wsSent = false;
+    if (isSocketConnected()) {
+      wsSent = sendIncidentViaWS(alertData);
+    }
+
+    // Also send via HTTP API as backup/confirmation (or if WS failed)
+    // The backend handles deduplication or broadcasting regardless of source
     const apiResult = await sendToEmergencyAPI(alertData);
 
     // Log alert
     await logAlert(alertData);
 
-    // Return result (success or failure, but don't throw)
+    // Return result
     return {
-      success: apiResult.success !== false,
+      success: wsSent || (apiResult.success !== false),
       localNotification: true,
-      backendSent: apiResult.success !== false,
+      backendSent: wsSent || (apiResult.success !== false),
+      wsSent: wsSent,
+      httpSent: apiResult.success !== false,
       error: apiResult.error,
     };
   } catch (error) {
@@ -92,7 +102,7 @@ const sendToEmergencyAPI = async (alertData) => {
   try {
     // Get backend URL from settings
     const backendUrl = await AsyncStorage.getItem('backendUrl');
-    let apiUrl = backendUrl || 'http://localhost:3000'; // Default to localhost
+    let apiUrl = backendUrl || 'http://172.20.10.4:3000'; // Default to localhost
     
     // Check if using localhost on mobile device (won't work)
     if (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1')) {

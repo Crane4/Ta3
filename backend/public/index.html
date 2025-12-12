@@ -3,418 +3,666 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم سامر - SAMER Dashboard</title>
+    <title>منصة سامر | مركز القيادة والتحكم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            color: #ffa500;
-        }
-
-        .subtitle {
-            opacity: 0.8;
-            font-size: 1.1em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .stat-card.critical {
-            border-color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.2);
-        }
-
-        .stat-card.warning {
-            border-color: #ffa500;
-            background: rgba(255, 165, 0, 0.2);
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin: 10px 0;
-            color: #ffa500;
-        }
-
-        .stat-label {
-            font-size: 1em;
-            opacity: 0.9;
-        }
-
-        .incidents-section {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-size: 1.8em;
-            color: #ffa500;
-        }
-
-        .refresh-btn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.3s;
-        }
-
-        .refresh-btn:hover {
-            background: #45a049;
-        }
-
-        .incidents-list {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .incident-card {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            border-right: 4px solid;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-        }
-
-        .incident-card:hover {
-            transform: translateX(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .incident-card.critical {
-            border-color: #ff6b6b;
-        }
-
-        .incident-card.warning {
-            border-color: #ffa500;
-        }
-
-        .incident-indicator {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            animation: pulse 2s infinite;
-        }
-
-        .incident-indicator.critical {
-            background-color: #ff0000;
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
-        }
-
-        .incident-indicator.warning {
-            background-color: #ffa500;
-            box-shadow: 0 0 10px rgba(255, 165, 0, 0.6);
-        }
-
-        .incident-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .incident-type {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #ffa500;
-        }
-
-        .incident-time {
-            font-size: 0.9em;
-            opacity: 0.7;
-        }
-
-        .incident-message {
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        .incident-location {
-            font-size: 0.9em;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
-
-        .incident-id {
-            font-size: 0.8em;
-            opacity: 0.6;
-            margin-top: 5px;
-        }
-
-        .no-incidents {
-            text-align: center;
-            padding: 40px;
-            opacity: 0.7;
-            font-size: 1.2em;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-left: 10px;
-            animation: pulse 2s infinite;
-        }
-
-        .status-indicator.active {
-            background: #4caf50;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 165, 0, 0.5);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 165, 0, 0.7);
-        }
-
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .section-title {
-                font-size: 1.4em;
-            }
-        }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f3f4f6; }
+        .map-container { height: 500px; width: 100%; border-radius: 0.5rem; overflow: hidden; z-index: 1; }
+        .sidebar-active { background-color: rgba(255, 255, 255, 0.1); border-right: 4px solid #F59E0B; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚨 لوحة تحكم سامر</h1>
-            <p class="subtitle">مراقبة الحوادث والسلوكيات الخطرة في الوقت الفعلي</p>
-            <p class="subtitle">
-                الحالة: <span class="status-indicator active"></span> متصل
-            </p>
-        </header>
-
-        <div class="stats-grid" id="statsGrid">
-            <!-- Stats will be loaded here -->
+    <div id="app" class="h-screen flex overflow-hidden bg-gray-100">
+        
+        <!-- Login Screen -->
+        <div v-if="!isAuthenticated" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-90 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-blend-overlay">
+            <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md backdrop-blur-sm bg-opacity-95">
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">منصة سامر</h1>
+                    <p class="text-gray-500">مركز القيادة والتحكم الذكي</p>
+                </div>
+                <form @submit.prevent="login" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
+                        <input v-model="credentials.username" type="text" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors" placeholder="admin">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
+                        <input v-model="credentials.password" type="password" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors" placeholder="••••••••">
+                    </div>
+                    <div v-if="loginError" class="text-red-500 text-sm text-center">{{ loginError }}</div>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] shadow-lg">
+                        تسجيل الدخول
+                    </button>
+                    <div class="text-center text-xs text-gray-400 mt-4">
+                        للنسخة التجريبية: admin / admin123
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="incidents-section">
-            <div class="section-header">
-                <h2 class="section-title">الحوادث المستلمة</h2>
-                <button class="refresh-btn" onclick="loadIncidents()">🔄 تحديث</button>
+        <!-- Sidebar -->
+        <aside v-if="isAuthenticated" class="w-64 bg-gray-900 text-white flex flex-col shadow-xl z-20 transition-all duration-300" :class="{'w-20': collapsed}">
+            <div class="h-16 flex items-center justify-center border-b border-gray-800 bg-gray-900">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-10 h-10 bg-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                    </div>
+                    <span v-if="!collapsed" class="text-xl font-bold tracking-wider">SAMER</span>
+                </div>
             </div>
-            <div class="incidents-list" id="incidentsList">
-                <div class="no-incidents">جاري التحميل...</div>
+
+            <nav class="flex-1 overflow-y-auto py-4">
+                <ul class="space-y-2 px-2">
+                    <li v-for="item in menuItems" :key="item.id">
+                        <a @click="currentView = item.id" 
+                           :class="['flex items-center p-3 rounded-lg cursor-pointer group', currentView === item.id ? 'bg-amber-600 text-white shadow-lg hover:bg-amber-700' : 'text-gray-400 hover:bg-gray-800 hover:text-white']">
+                            <span class="text-xl group-hover:scale-110 transition-transform" v-html="item.icon"></span>
+                            <span v-if="!collapsed" class="mr-3 font-medium">{{ item.label }}</span>
+                            <span v-if="item.badge && !collapsed" class="mr-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">{{ item.badge }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        <span class="text-lg">👮‍♂️</span>
+                    </div>
+                    <div v-if="!collapsed">
+                        <p class="text-sm font-semibold">{{ currentUser.role === 'admin' ? 'مدير النظام' : 'مراقب' }}</p>
+                        <p class="text-xs text-green-400 flex items-center">
+                            <span class="w-2 h-2 bg-green-500 rounded-full ml-1 animate-pulse"></span> متصل
+                        </p>
+                    </div>
+                </div>
+                <button @click="logout" class="mt-4 w-full flex items-center justify-center p-2 text-red-400 hover:bg-red-900/20 rounded-lg">
+                    <span v-if="!collapsed" class="ml-2">تسجيل خروج</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main v-if="isAuthenticated" class="flex-1 flex flex-col relative overflow-hidden">
+            <!-- Header -->
+            <header class="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
+                <div class="flex items-center">
+                    <button @click="collapsed = !collapsed" class="text-gray-500 hover:text-gray-700 focus:outline-none p-2 rounded-lg hover:bg-gray-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <h2 class="mr-4 text-xl font-bold text-gray-800">{{ pageTitle }}</h2>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="relative">
+                        <span class="absolute top-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                        <span class="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
+                            حالة النظام: مستقر
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-500">{{ currentTime }}</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                
+                <!-- Overview View -->
+                <div v-if="currentView === 'overview'" class="space-y-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl p-6 shadow-sm border-r-4 border-red-500 relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">الحوادث الحرجة</p>
+                                    <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ stats.critical }}</h3>
+                                </div>
+                                <div class="p-3 bg-red-50 rounded-lg text-red-500">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-red-600 font-medium">
+                                +2 منذ آخر ساعة
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border-r-4 border-amber-500 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">تحذيرات سلوكية</p>
+                                    <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ stats.warning }}</h3>
+                                </div>
+                                <div class="p-3 bg-amber-50 rounded-lg text-amber-500">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-amber-600 font-medium">
+                                تشمل التشتت والنعاس
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border-r-4 border-blue-500 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">الوحدات النشطة</p>
+                                    <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ activeDevices.length }}</h3>
+                                </div>
+                                <div class="p-3 bg-blue-50 rounded-lg text-blue-500">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-blue-600 font-medium flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full ml-1"></span>
+                                {{ activeDevices.length > 0 ? 'النظام متصل بالوحدات' : 'جاري انتظار الوحدات' }}
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border-r-4 border-green-500 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">إجمالي البلاغات</p>
+                                    <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total }}</h3>
+                                </div>
+                                <div class="p-3 bg-green-50 rounded-lg text-green-500">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-green-600 font-medium">
+                                خلال 24 ساعة الماضية
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Map Section -->
+                    <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-800 flex items-center">
+                                <svg class="w-5 h-5 ml-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                الخريطة التفاعلية
+                            </h3>
+                            <div class="flex space-x-2 space-x-reverse text-xs">
+                                <span class="flex items-center"><span class="w-3 h-3 bg-red-500 rounded-full ml-1"></span> حادث</span>
+                                <span class="flex items-center"><span class="w-3 h-3 bg-blue-500 rounded-full ml-1"></span> دورية</span>
+                            </div>
+                        </div>
+                        <div id="map" class="map-container bg-gray-100"></div>
+                    </div>
+
+                    <!-- Recent Incidents Table -->
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-800">آخر البلاغات المستلمة</h3>
+                            <button class="text-sm text-blue-600 hover:text-blue-800 font-medium">عرض الكل</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-right">
+                                <thead class="bg-gray-50 text-gray-500">
+                                    <tr>
+                                        <th class="px-6 py-3 font-medium">نوع البلاغ</th>
+                                        <th class="px-6 py-3 font-medium">الموقع</th>
+                                        <th class="px-6 py-3 font-medium">الوقت</th>
+                                        <th class="px-6 py-3 font-medium">الحالة</th>
+                                        <th class="px-6 py-3 font-medium">التفاصيل</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr v-for="incident in incidents.slice(0, 5)" :key="incident.id" class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div :class="['w-8 h-8 rounded-full flex items-center justify-center ml-3 text-white', getSeverityColor(incident.severity)]">
+                                                    <span v-html="getIncidentIcon(incident.type)"></span>
+                                                </div>
+                                                <div>
+                                                    <div class="font-medium text-gray-900">{{ getIncidentTitle(incident.type) }}</div>
+                                                    <div class="text-xs text-gray-500">{{ incident.id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">
+                                            {{ incident.location ? `${incident.location.latitude.toFixed(4)}, ${incident.location.longitude.toFixed(4)}` : 'غير محدد' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-gray-600">
+                                            {{ formatTime(incident.timestamp) }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span :class="['px-2 py-1 rounded-full text-xs font-medium', incident.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700']">
+                                                {{ incident.severity === 'critical' ? 'حرج' : 'تحذير' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <button @click="viewIncident(incident)" class="text-blue-600 hover:text-blue-800">عرض</button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="incidents.length === 0">
+                                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">لا توجد بلاغات حتى الآن</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Units View -->
+                <div v-if="currentView === 'units'" class="space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <div class="flex items-center">
+                                <h3 class="font-bold text-gray-800 text-lg ml-4">وحدات المراقبة النشطة</h3>
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">{{ activeDevices.length }} متصل</span>
+                            </div>
+                            <div class="flex w-full md:w-auto space-x-2 space-x-reverse">
+                                <input v-model="deviceSearch" type="text" placeholder="بحث عن وحدة..." class="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64">
+                                <select v-model="deviceSort" class="px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                    <option value="name">الاسم</option>
+                                    <option value="battery">البطارية (الأقل أولاً)</option>
+                                    <option value="lastSeen">آخر ظهور</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div v-for="device in filteredDevices" :key="device.id" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center ml-3 text-blue-600">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-900">{{ device.name || device.id }}</h4>
+                                            <p class="text-xs text-gray-500">{{ device.type }}</p>
+                                        </div>
+                                    </div>
+                                    <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-500">البطارية</span>
+                                        <span :class="getBatteryColor(device.battery)" class="font-medium">{{ device.battery }}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                        <div class="bg-green-500 h-1.5 rounded-full" :style="{ width: device.battery + '%' }"></div>
+                                    </div>
+                                    <div class="flex justify-between text-sm pt-2 border-t border-gray-100">
+                                        <span class="text-gray-500">آخر ظهور</span>
+                                        <span class="text-gray-700">{{ formatTime(device.lastSeen) }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-500">الموقع</span>
+                                        <span class="text-gray-700 text-xs truncate max-w-[150px]">
+                                            {{ device.location ? `${device.location.latitude.toFixed(4)}, ${device.location.longitude.toFixed(4)}` : 'غير متوفر' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div v-if="activeDevices.length === 0" class="col-span-full py-12 text-center text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                                <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+                                <p>لا توجد وحدات متصلة حالياً</p>
+                                <p class="text-sm mt-2">تأكد من تشغيل التطبيق واتصاله بالإنترنت</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Incidents View (Detailed) -->
+                <div v-if="currentView === 'incidents'" class="space-y-6">
+                    <!-- Similar table to overview but full page with more filters potentially -->
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100">
+                            <h3 class="font-bold text-gray-800">سجل البلاغات الكامل</h3>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            <div v-for="incident in incidents" :key="incident.id" class="p-6 hover:bg-gray-50 transition-colors flex flex-col md:flex-row gap-6">
+                                <div class="w-full md:w-48 h-32 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img v-if="incident.imagePath" :src="incident.imagePath" class="w-full h-full object-cover" alt="Incident">
+                                    <div v-else class="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+                                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-bold text-lg text-gray-900">{{ getIncidentTitle(incident.type) }}</h4>
+                                            <p class="text-gray-600 mt-1">{{ incident.message }}</p>
+                                        </div>
+                                        <span :class="['px-3 py-1 rounded-full text-xs font-bold', incident.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700']">
+                                            {{ incident.severity === 'critical' ? 'حرج' : 'تحذير' }}
+                                        </span>
+                                    </div>
+                                    <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            {{ formatTime(incident.timestamp) }}
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            {{ incident.location ? `${incident.location.latitude}, ${incident.location.longitude}` : 'غير محدد' }}
+                                        </div>
+                                        <div class="flex items-center">
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path></svg>
+                                            {{ incident.id }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Incident Modal -->
+        <div v-if="selectedIncident" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75 backdrop-blur-sm" @click.self="selectedIncident = null">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+                <div class="relative h-64 bg-gray-200">
+                    <img v-if="selectedIncident.imagePath" :src="selectedIncident.imagePath" class="w-full h-full object-cover">
+                    <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                        <span class="text-lg">لا توجد صورة</span>
+                    </div>
+                    <button @click="selectedIncident = null" class="absolute top-4 right-4 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-70 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="p-8">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ getIncidentTitle(selectedIncident.type) }}</h3>
+                            <p class="text-gray-500">{{ formatTime(selectedIncident.timestamp) }}</p>
+                        </div>
+                        <span :class="['px-4 py-2 rounded-full font-bold', selectedIncident.severity === 'critical' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600']">
+                            {{ selectedIncident.severity === 'critical' ? 'حرج' : 'تحذير' }}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <p class="text-gray-700 font-medium">{{ selectedIncident.message }}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-sm text-gray-500 block">رقم البلاغ</span>
+                                <span class="font-mono text-gray-900">{{ selectedIncident.id }}</span>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500 block">الموقع</span>
+                                <span class="text-gray-900">{{ selectedIncident.location ? `${selectedIncident.location.latitude}, ${selectedIncident.location.longitude}` : 'N/A' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex space-x-3 space-x-reverse">
+                        <button class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                            توجيه وحدة قريبة
+                        </button>
+                        <button class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-200 transition-colors">
+                            إغلاق البلاغ
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = window.location.origin;
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
 
-        // Load stats
-        async function loadStats() {
-            try {
-                const response = await fetch(`${API_URL}/api/stats`);
-                const data = await response.json();
+        createApp({
+            setup() {
+                const collapsed = ref(false);
+                const currentView = ref('overview');
+                const isAuthenticated = ref(false);
+                const currentUser = ref(null);
+                const credentials = ref({ username: '', password: '' });
+                const loginError = ref('');
+                const incidents = ref([]);
+                const activeDevices = ref([]);
+                const selectedIncident = ref(null);
+                const currentTime = ref('');
+                const map = ref(null);
+                const mapMarkers = ref([]);
                 
-                if (data.success) {
-                    const stats = data.stats;
-                    const statsGrid = document.getElementById('statsGrid');
-                    
-                    statsGrid.innerHTML = `
-                        <div class="stat-card critical">
-                            <div class="stat-label">إجمالي الحوادث</div>
-                            <div class="stat-value">${stats.total}</div>
-                        </div>
-                        <div class="stat-card critical">
-                            <div class="stat-label">حوادث مرورية</div>
-                            <div class="stat-value">${stats.accidents}</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <div class="stat-label">خروج عن المسار</div>
-                            <div class="stat-value">${stats.laneDepartures}</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <div class="stat-label">توقف غير طبيعي</div>
-                            <div class="stat-value">${stats.abnormalStopping}</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <div class="stat-label">قيادة مشتتة</div>
-                            <div class="stat-value">${stats.distractedDriving}</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <div class="stat-label">قيادة نعسانة</div>
-                            <div class="stat-value">${stats.drowsyDriving}</div>
-                        </div>
-                        <div class="stat-card critical">
-                            <div class="stat-label">حرجة</div>
-                            <div class="stat-value">${stats.critical}</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <div class="stat-label">تحذيرات</div>
-                            <div class="stat-value">${stats.warning}</div>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
+                const deviceSearch = ref('');
+                const deviceSort = ref('lastSeen');
 
-        // Load incidents
-        async function loadIncidents() {
-            try {
-                const response = await fetch(`${API_URL}/api/incidents`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const incidentsList = document.getElementById('incidentsList');
+                const filteredDevices = computed(() => {
+                    let devices = [...activeDevices.value];
                     
-                    if (data.incidents.length === 0) {
-                        incidentsList.innerHTML = '<div class="no-incidents">لا توجد حوادث مستلمة حتى الآن</div>';
-                        return;
+                    // Filter
+                    if (deviceSearch.value) {
+                        const query = deviceSearch.value.toLowerCase();
+                        devices = devices.filter(d => 
+                            (d.name && d.name.toLowerCase().includes(query)) || 
+                            d.id.toLowerCase().includes(query) ||
+                            (d.type && d.type.toLowerCase().includes(query))
+                        );
                     }
                     
-                    incidentsList.innerHTML = data.incidents.map(incident => {
-                        const date = new Date(incident.timestamp);
-                        const timeStr = date.toLocaleString('ar-SA', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
+                    // Sort
+                    devices.sort((a, b) => {
+                        if (deviceSort.value === 'name') {
+                            return (a.name || a.id).localeCompare(b.name || b.id);
+                        } else if (deviceSort.value === 'battery') {
+                            return a.battery - b.battery;
+                        } else if (deviceSort.value === 'lastSeen') {
+                            return new Date(b.lastSeen) - new Date(a.lastSeen);
+                        }
+                        return 0;
+                    });
+                    
+                    return devices;
+                });
+                
+                // Initialize WebSocket
+                let socket;
+                
+                const menuItems = [
+                    { id: 'overview', label: 'لوحة القيادة', icon: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>' },
+                    { id: 'incidents', label: 'البلاغات', icon: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>', badge: 'جديد' },
+                    { id: 'units', label: 'الوحدات النشطة', icon: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7"></path></svg>' },
+                ];
+
+                const stats = computed(() => {
+                    return {
+                        total: incidents.value.length,
+                        critical: incidents.value.filter(i => i.severity === 'critical').length,
+                        warning: incidents.value.filter(i => i.severity === 'warning').length,
+                    };
+                });
+
+                const login = async () => {
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(credentials.value)
                         });
-                        
-                        const severityClass = incident.severity === 'critical' ? 'critical' : 'warning';
-                        const typeLabels = {
-                            'accident': '🚨 حادث مروري',
-                            'lane_departure': '⚠️ خروج عن المسار',
-                            'abnormal_stopping': '⚠️ توقف غير طبيعي',
-                            'distracted_driving': '⚠️ قيادة مشتتة',
-                            'drowsy_driving': '⚠️ قيادة نعسانة'
-                        };
-                        
-                        const typeLabel = typeLabels[incident.type] || incident.type;
-                        
-                        return `
-                            <div class="incident-card ${severityClass}">
-                                <div class="incident-indicator ${severityClass}"></div>
-                                <div class="incident-header">
-                                    <div class="incident-type">${typeLabel}</div>
-                                    <div class="incident-time">${timeStr}</div>
-                                </div>
-                                <div class="incident-message">${incident.message || 'لا توجد رسالة'}</div>
-                                ${incident.location ? `
-                                    <div class="incident-location">
-                                        📍 الموقع: ${incident.location.latitude.toFixed(6)}, ${incident.location.longitude.toFixed(6)}
-                                    </div>
-                                ` : ''}
-                                <div class="incident-id">ID: ${incident.id}</div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            } catch (error) {
-                console.error('Error loading incidents:', error);
-                document.getElementById('incidentsList').innerHTML = 
-                    '<div class="no-incidents">خطأ في تحميل البيانات</div>';
+                        const data = await response.json();
+                        if (data.success) {
+                            isAuthenticated.value = true;
+                            currentUser.value = { role: data.role, token: data.token };
+                            connectWebSocket();
+                            startClock();
+                            // Delay map init slightly to ensure DOM is ready
+                            setTimeout(initMap, 500);
+                        } else {
+                            loginError.value = 'بيانات الدخول غير صحيحة';
+                        }
+                    } catch (e) {
+                        loginError.value = 'خطأ في الاتصال بالخادم';
+                    }
+                };
+
+                const logout = () => {
+                    isAuthenticated.value = false;
+                    currentUser.value = null;
+                    if (socket) socket.close();
+                };
+
+                const connectWebSocket = () => {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ws/incidents`;
+                    
+                    socket = new WebSocket(wsUrl);
+                    
+                    socket.onopen = () => {
+                        console.log('Connected to WS');
+                        // Register as admin to receive device updates
+                        socket.send(JSON.stringify({
+                            type: 'register',
+                            payload: {
+                                id: 'admin-dashboard',
+                                role: 'admin',
+                                name: 'Command Center'
+                            }
+                        }));
+                    };
+                    
+                    socket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'sync') {
+                            incidents.value = data.incidents;
+                            updateMapMarkers();
+                        } else if (data.type === 'incident') {
+                            incidents.value.unshift(data.incident);
+                            updateMapMarkers();
+                            // Play sound?
+                        } else if (data.type === 'devices_update') {
+                            activeDevices.value = data.devices;
+                            updateMapMarkers(); // Update device locations on map
+                        }
+                    };
+                    
+                    socket.onclose = () => {
+                        console.log('WS Disconnected, retrying...');
+                        setTimeout(connectWebSocket, 3000);
+                    };
+                };
+
+                const initMap = () => {
+                    if (document.getElementById('map') && !map.value) {
+                        // Default center (Riyadh)
+                        map.value = L.map('map').setView([24.7136, 46.6753], 11);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map.value);
+                        updateMapMarkers();
+                    }
+                };
+
+                const updateMapMarkers = () => {
+                    if (!map.value) return;
+                    
+                    // Clear existing markers
+                    mapMarkers.value.forEach(m => m.remove());
+                    mapMarkers.value = [];
+                    
+                    // Add Incidents Markers
+                    incidents.value.forEach(incident => {
+                        if (incident.location) {
+                            const color = incident.severity === 'critical' ? 'red' : 'orange';
+                            const marker = L.circleMarker([incident.location.latitude, incident.location.longitude], {
+                                radius: 8,
+                                fillColor: color,
+                                color: '#fff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).addTo(map.value);
+                            marker.bindPopup(`<b>${getIncidentTitle(incident.type)}</b><br>${incident.message}`);
+                            mapMarkers.value.push(marker);
+                        }
+                    });
+
+                    // Add Devices Markers
+                    activeDevices.value.forEach(device => {
+                        if (device.location) {
+                            const marker = L.circleMarker([device.location.latitude, device.location.longitude], {
+                                radius: 6,
+                                fillColor: '#3B82F6', // Blue
+                                color: '#fff',
+                                weight: 2,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).addTo(map.value);
+                            marker.bindPopup(`<b>${device.name}</b><br>Battery: ${device.battery}%`);
+                            mapMarkers.value.push(marker);
+                        }
+                    });
+                };
+
+                const startClock = () => {
+                    setInterval(() => {
+                        const now = new Date();
+                        currentTime.value = now.toLocaleTimeString('ar-SA');
+                    }, 1000);
+                };
+
+                const formatTime = (isoString) => {
+                    if (!isoString) return '';
+                    const date = new Date(isoString);
+                    return date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+                };
+
+                const getIncidentTitle = (type) => {
+                    const titles = {
+                        'accident': 'حادث مروري',
+                        'lane_departure': 'خروج عن المسار',
+                        'abnormal_stopping': 'توقف غير طبيعي',
+                        'distracted_driving': 'قيادة مشتتة',
+                        'drowsy_driving': 'نعاس السائق'
+                    };
+                    return titles[type] || type;
+                };
+
+                const getIncidentIcon = (type) => {
+                    // Simple icons mapping
+                    return '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+                };
+                
+                const getSeverityColor = (severity) => {
+                    return severity === 'critical' ? 'bg-red-500' : 'bg-amber-500';
+                };
+
+                const getBatteryColor = (level) => {
+                    if (level > 50) return 'text-green-600';
+                    if (level > 20) return 'text-amber-600';
+                    return 'text-red-600';
+                };
+                
+                const viewIncident = (incident) => {
+                    selectedIncident.value = incident;
+                };
+
+                const pageTitle = computed(() => {
+                    const item = menuItems.find(i => i.id === currentView.value);
+                    return item ? item.label : 'لوحة التحكم';
+                });
+
+                return {
+                    collapsed, currentView, isAuthenticated, currentUser, credentials, loginError,
+                    menuItems, stats, activeDevices, incidents, currentTime, selectedIncident,
+                    login, logout, formatTime, getIncidentTitle, getIncidentIcon, getSeverityColor, 
+                    getBatteryColor, viewIncident, pageTitle
+                };
             }
-        }
-
-        // Auto-refresh every 3 seconds
-        setInterval(() => {
-            loadStats();
-            loadIncidents();
-        }, 3000);
-
-        // Initial load
-        loadStats();
-        loadIncidents();
+        }).mount('#app');
     </script>
 </body>
 </html>
-

@@ -7,17 +7,21 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
+  Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeInUp, SlideInRight } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import {
   getIncidentStats,
   identifyHighRiskAreas,
   predictAccidentLocations,
   getIncidentTrends,
 } from '../services/analyticsService';
-import { getIncidents } from '../services/storageService';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function AnalyticsScreen() {
   const [loading, setLoading] = useState(true);
@@ -54,315 +58,257 @@ export default function AnalyticsScreen() {
 
   const getRiskColor = (riskLevel) => {
     switch (riskLevel) {
-      case 'critical': return '#ff0000';
-      case 'high': return '#ff6b6b';
-      case 'medium': return '#ffa500';
-      default: return '#4caf50';
+      case 'critical': return '#FF5252';
+      case 'high': return '#FF9800';
+      case 'medium': return '#FFC107';
+      default: return '#4CAF50';
     }
   };
 
   const getRiskLabel = (riskLevel) => {
     switch (riskLevel) {
-      case 'critical': return 'حرج';
-      case 'high': return 'عالي';
-      case 'medium': return 'متوسط';
-      default: return 'منخفض';
+      case 'critical': return 'حرج جداً';
+      case 'high': return 'عالي الخطورة';
+      case 'medium': return 'متوسط الخطورة';
+      default: return 'منخفض الخطورة';
     }
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <View style={styles.loadingIconContainer}>
-          <ActivityIndicator size="large" color="#ffa500" />
-        </View>
-        <Text style={styles.loadingText}>جاري تحميل التحليلات...</Text>
+        <ActivityIndicator size="large" color="#FF9800" />
+        <Text style={styles.loadingText}>جاري تحميل البيانات...</Text>
       </View>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerIconContainer}>
-            <Ionicons name="stats-chart" size={32} color="#ffa500" />
-          </View>
-          <Text style={styles.headerTitle}>لوحة التحليلات</Text>
-          <Text style={styles.headerSubtitle}>مراقبة وتحليل بيانات الحوادث</Text>
-        </View>
-
-        {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'overview' && styles.tabActive]}
-            onPress={() => setSelectedTab('overview')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="grid"
-              size={18}
-              color={selectedTab === 'overview' ? '#FFFFFF' : '#888'}
-              style={styles.tabIcon}
-            />
-            <Text style={[styles.tabText, selectedTab === 'overview' && styles.tabTextActive]}>
-              نظرة عامة
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'risks' && styles.tabActive]}
-            onPress={() => setSelectedTab('risks')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="warning"
-              size={18}
-              color={selectedTab === 'risks' ? '#FFFFFF' : '#888'}
-              style={styles.tabIcon}
-            />
-            <Text style={[styles.tabText, selectedTab === 'risks' && styles.tabTextActive]}>
-              المخاطر
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'predictions' && styles.tabActive]}
-            onPress={() => setSelectedTab('predictions')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="bulb"
-              size={18}
-              color={selectedTab === 'predictions' ? '#FFFFFF' : '#888'}
-              style={styles.tabIcon}
-            />
-            <Text style={[styles.tabText, selectedTab === 'predictions' && styles.tabTextActive]}>
-              التنبؤات
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Overview Tab */}
-        {selectedTab === 'overview' && (
-          <View>
-            {/* Section Header */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>الإحصائيات</Text>
-              <View style={styles.sectionIconContainer}>
-                <Ionicons name="pie-chart" size={20} color="#ffa500" />
+  const renderTabContent = () => {
+    switch (selectedTab) {
+      case 'overview':
+        return (
+          <Animated.View entering={FadeInDown.duration(500)}>
+            {/* Main Stats Grid */}
+            <View style={styles.gridContainer}>
+              <View style={styles.gridRow}>
+                <View style={[styles.statCard, styles.cardElevated]}>
+                  <View style={[styles.iconBox, { backgroundColor: '#FFF3E0' }]}>
+                    <Ionicons name="warning" size={24} color="#FF9800" />
+                  </View>
+                  <Text style={styles.statValue}>{stats?.totalIncidents || 0}</Text>
+                  <Text style={styles.statLabel}>إجمالي الحوادث</Text>
+                </View>
+                <View style={[styles.statCard, styles.cardElevated]}>
+                  <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
+                    <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                  </View>
+                  <Text style={styles.statValue}>{stats?.todayIncidents || 0}</Text>
+                  <Text style={styles.statLabel}>حوادث اليوم</Text>
+                </View>
+              </View>
+              <View style={styles.gridRow}>
+                <View style={[styles.statCard, styles.cardElevated]}>
+                  <View style={[styles.iconBox, { backgroundColor: '#FFEBEE' }]}>
+                    <Ionicons name="alert" size={24} color="#F44336" />
+                  </View>
+                  <Text style={styles.statValue}>{stats?.criticalIncidents || 0}</Text>
+                  <Text style={styles.statLabel}>حالات حرجة</Text>
+                </View>
+                <View style={[styles.statCard, styles.cardElevated]}>
+                  <View style={[styles.iconBox, { backgroundColor: '#E3F2FD' }]}>
+                    <Ionicons name="notifications" size={24} color="#2196F3" />
+                  </View>
+                  <Text style={styles.statValue}>{stats?.warningIncidents || 0}</Text>
+                  <Text style={styles.statLabel}>تنبيهات</Text>
+                </View>
               </View>
             </View>
 
-            {/* Stats Grid */}
-            <View style={styles.statsGrid}>
-              <View style={[styles.statCard, styles.statCardOrange]}>
-                <View style={styles.statIconWrapper}>
-                  <Ionicons name="warning" size={24} color="#ffa500" />
-                </View>
-                <Text style={styles.statValue}>{stats?.totalIncidents || 0}</Text>
-                <Text style={styles.statTitle}>إجمالي الحوادث</Text>
-              </View>
-
-              <View style={[styles.statCard, styles.statCardGreen]}>
-                <View style={styles.statIconWrapper}>
-                  <Ionicons name="today" size={24} color="#4caf50" />
-                </View>
-                <Text style={[styles.statValue, { color: '#4caf50' }]}>{stats?.todayIncidents || 0}</Text>
-                <Text style={styles.statTitle}>حوادث اليوم</Text>
-              </View>
-
-              <View style={[styles.statCard, styles.statCardRed]}>
-                <View style={styles.statIconWrapper}>
-                  <Ionicons name="alert-circle" size={24} color="#ff6b6b" />
-                </View>
-                <Text style={[styles.statValue, { color: '#ff6b6b' }]}>{stats?.criticalIncidents || 0}</Text>
-                <Text style={styles.statTitle}>حرجة</Text>
-              </View>
-
-              <View style={[styles.statCard, styles.statCardBlue]}>
-                <View style={styles.statIconWrapper}>
-                  <Ionicons name="notifications" size={24} color="#0066CC" />
-                </View>
-                <Text style={[styles.statValue, { color: '#0066CC' }]}>{stats?.warningIncidents || 0}</Text>
-                <Text style={styles.statTitle}>تحذيرات</Text>
-              </View>
-            </View>
-
-            {/* Trends Card */}
+            {/* Trends Section */}
             {trends && (
-              <View style={styles.trendsCard}>
-                <View style={styles.trendsHeader}>
-                  <View style={styles.trendsIconContainer}>
-                    <Ionicons name="trending-up" size={24} color="#ffa500" />
-                  </View>
-                  <Text style={styles.trendsTitle}>الاتجاهات (آخر 30 يوم)</Text>
+              <View style={[styles.sectionCard, styles.cardElevated]}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>اتجاهات الحوادث</Text>
+                  <Ionicons name="trending-up" size={20} color="#FF9800" />
                 </View>
-                <View style={styles.trendsDivider} />
-                <View style={styles.trendsContent}>
-                  <View style={styles.trendItem}>
-                    <Text style={styles.trendValue}>{trends.total}</Text>
-                    <Text style={styles.trendLabel}>إجمالي الحوادث</Text>
-                  </View>
-                  <View style={styles.trendItemDivider} />
+                <View style={styles.trendInfo}>
                   <View style={styles.trendItem}>
                     <Text style={styles.trendValue}>{trends.averagePerDay.toFixed(1)}</Text>
                     <Text style={styles.trendLabel}>متوسط يومي</Text>
                   </View>
+                  <View style={styles.verticalDivider} />
+                  <View style={styles.trendItem}>
+                    <Text style={styles.trendValue}>{trends.total}</Text>
+                    <Text style={styles.trendLabel}>آخر 30 يوم</Text>
+                  </View>
                 </View>
                 <View style={styles.trendBadgeContainer}>
-                  <View style={styles.trendBadge}>
-                    <Ionicons name="analytics" size={14} color="#0066CC" />
-                    <Text style={styles.trendBadgeText}>الاتجاه: {trends.trend}</Text>
+                  <View style={[styles.trendBadge, { backgroundColor: trends.trend === 'up' ? '#FFEBEE' : '#E8F5E9' }]}>
+                    <Ionicons 
+                      name={trends.trend === 'up' ? 'arrow-up' : 'arrow-down'} 
+                      size={16} 
+                      color={trends.trend === 'up' ? '#F44336' : '#4CAF50'} 
+                    />
+                    <Text style={[styles.trendBadgeText, { color: trends.trend === 'up' ? '#F44336' : '#4CAF50' }]}>
+                      {trends.trend === 'up' ? 'ارتفاع في المعدل' : 'انخفاض في المعدل'}
+                    </Text>
                   </View>
                 </View>
               </View>
             )}
-          </View>
-        )}
+          </Animated.View>
+        );
 
-        {/* Risks Tab */}
-        {selectedTab === 'risks' && (
-          <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>مناطق عالية الخطورة</Text>
-              <View style={[styles.sectionIconContainer, { backgroundColor: '#FFEBEE' }]}>
-                <Ionicons name="location" size={20} color="#ff6b6b" />
-              </View>
-            </View>
-
+      case 'risks':
+        return (
+          <Animated.View entering={FadeInDown.duration(500)}>
             {highRiskAreas.length === 0 ? (
               <View style={styles.emptyState}>
-                <View style={styles.emptyIconContainer}>
-                  <Ionicons name="shield-checkmark" size={50} color="#4caf50" />
-                </View>
-                <Text style={styles.emptyTitle}>لا توجد مناطق خطرة</Text>
-                <Text style={styles.emptyText}>لم يتم تحديد مناطق عالية الخطورة بعد</Text>
+                <Ionicons name="shield-checkmark-outline" size={80} color="#E0E0E0" />
+                <Text style={styles.emptyText}>لا توجد مناطق خطرة مسجلة</Text>
               </View>
             ) : (
               highRiskAreas.map((area, index) => (
-                <View key={index} style={styles.riskCard}>
-                  <View style={styles.riskCardHeader}>
-                    <View style={styles.riskCardLeft}>
-                      <View style={[styles.riskBadge, { backgroundColor: getRiskColor(area.riskLevel) }]}>
-                        <Text style={styles.riskBadgeText}>{getRiskLabel(area.riskLevel)}</Text>
-                      </View>
+                <View key={index} style={[styles.riskCard, styles.cardElevated]}>
+                  <View style={styles.riskHeader}>
+                    <View style={[styles.riskLevelBadge, { backgroundColor: getRiskColor(area.riskLevel) + '20' }]}>
+                      <Text style={[styles.riskLevelText, { color: getRiskColor(area.riskLevel) }]}>
+                        {getRiskLabel(area.riskLevel)}
+                      </Text>
                     </View>
-                    <View style={styles.riskCardRight}>
-                      <Text style={styles.riskCardTitle}>منطقة #{index + 1}</Text>
-                      <View style={styles.riskIconContainer}>
-                        <Ionicons name="warning" size={22} color={getRiskColor(area.riskLevel)} />
-                      </View>
-                    </View>
+                    <Text style={styles.riskTitle}>منطقة #{index + 1}</Text>
                   </View>
-                  <View style={styles.riskCardDivider} />
-                  <View style={styles.riskCardInfo}>
-                    <View style={styles.riskInfoItem}>
-                      <Ionicons name="car-sport" size={18} color="#666" />
-                      <Text style={styles.riskInfoText}>الحوادث: {area.incidentCount}</Text>
+                  <View style={styles.riskDetails}>
+                    <View style={styles.riskDetailItem}>
+                      <Ionicons name="car-sport-outline" size={18} color="#666" />
+                      <Text style={styles.riskDetailText}>{area.incidentCount} حادثة</Text>
                     </View>
-                    <View style={styles.riskInfoItem}>
-                      <Ionicons name="navigate" size={18} color="#666" />
-                      <Text style={styles.riskInfoText}>
-                        {area.center.latitude.toFixed(4)}\xB0, {area.center.longitude.toFixed(4)}\xB0
+                    <View style={styles.riskDetailItem}>
+                      <Ionicons name="location-outline" size={18} color="#666" />
+                      <Text style={styles.riskDetailText}>
+                        {area.center.latitude.toFixed(4)}, {area.center.longitude.toFixed(4)}
                       </Text>
                     </View>
                   </View>
                 </View>
               ))
             )}
-          </View>
-        )}
+          </Animated.View>
+        );
 
-        {/* Predictions Tab */}
-        {selectedTab === 'predictions' && (
-          <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>تنبؤات الحوادث</Text>
-              <View style={[styles.sectionIconContainer, { backgroundColor: '#E3F2FD' }]}>
-                <Ionicons name="bulb" size={20} color="#0066CC" />
-              </View>
-            </View>
-
+      case 'predictions':
+        return (
+          <Animated.View entering={FadeInDown.duration(500)}>
             {predictions.length === 0 ? (
               <View style={styles.emptyState}>
-                <View style={[styles.emptyIconContainer, { backgroundColor: '#E3F2FD' }]}>
-                  <Ionicons name="analytics" size={50} color="#0066CC" />
-                </View>
-                <Text style={styles.emptyTitle}>لا توجد تنبؤات</Text>
-                <Text style={styles.emptyText}>هناك حاجة إلى المزيد من بيانات الحوادث للتنبؤات الدقيقة</Text>
+                <Ionicons name="analytics-outline" size={80} color="#E0E0E0" />
+                <Text style={styles.emptyText}>جاري جمع البيانات للتنبؤ...</Text>
               </View>
             ) : (
-              predictions.map((prediction, index) => (
-                <View key={index} style={styles.predictionCard}>
+              predictions.map((pred, index) => (
+                <View key={index} style={[styles.predictionCard, styles.cardElevated]}>
                   <View style={styles.predictionHeader}>
-                    <View style={styles.predictionScoreContainer}>
-                      <Text style={styles.predictionScoreText}>{prediction.predictionScore}%</Text>
+                    <View style={styles.predictionScore}>
+                      <Text style={styles.scoreText}>{pred.predictionScore}%</Text>
+                      <Text style={styles.scoreLabel}>احتمالية</Text>
                     </View>
-                    <View style={styles.predictionHeaderRight}>
-                      <Text style={styles.predictionTitle}>التنبؤ #{index + 1}</Text>
-                      <View style={styles.predictionIconContainer}>
-                        <Ionicons name="bulb" size={22} color="#ffa500" />
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Progress Bar */}
-                  <View style={styles.progressBarContainer}>
-                    <View style={[styles.progressBar, { width: `${prediction.predictionScore}%` }]} />
-                  </View>
-
-                  <View style={styles.predictionDetails}>
-                    <View style={styles.predictionDetailItem}>
-                      <View style={[styles.detailBadge, { backgroundColor: getRiskColor(prediction.riskLevel) + '20' }]}>
-                        <Ionicons name="shield" size={16} color={getRiskColor(prediction.riskLevel)} />
-                        <Text style={[styles.detailBadgeText, { color: getRiskColor(prediction.riskLevel) }]}>
-                          {getRiskLabel(prediction.riskLevel)}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.predictionInfoRow}>
-                      <View style={styles.predictionInfoItem}>
-                        <Ionicons name="car" size={16} color="#888" />
-                        <Text style={styles.predictionInfoText}>{prediction.incidentCount} حادثة</Text>
-                      </View>
-                      <View style={styles.predictionInfoItem}>
-                        <Ionicons name="time" size={16} color="#888" />
-                        <Text style={styles.predictionInfoText}>الذروة: {prediction.timePatterns.peakHour}:00</Text>
-                      </View>
+                    <View style={styles.predictionTitleBox}>
+                      <Text style={styles.predictionTitle}>تنبؤ #{index + 1}</Text>
+                      <Text style={styles.predictionSubtitle}>تحليل مستقبلي</Text>
                     </View>
                   </View>
+                  
+                  <View style={styles.progressContainer}>
+                    <View style={[styles.progressBar, { width: `${pred.predictionScore}%`, backgroundColor: getRiskColor(pred.riskLevel) }]} />
+                  </View>
 
-                  <View style={styles.recommendationContainer}>
-                    <View style={styles.recommendationHeader}>
-                      <Text style={styles.recommendationTitle}>التوصية</Text>
-                      <Ionicons name="information-circle" size={18} color="#0066CC" />
-                    </View>
-                    <Text style={styles.recommendationText}>{prediction.recommendation}</Text>
+                  <View style={styles.recommendationBox}>
+                    <Ionicons name="bulb-outline" size={20} color="#FF9800" style={{ marginBottom: 5 }} />
+                    <Text style={styles.recommendationText}>{pred.recommendation}</Text>
                   </View>
                 </View>
               ))
             )}
-          </View>
-        )}
+          </Animated.View>
+        );
+    }
+  };
 
-        {/* Refresh Button */}
+  return (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+      
+      {/* Header Background */}
+      <View style={styles.headerContainer}>
+        <LinearGradient
+          colors={['#FF9800', '#F57C00']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
+        />
+        <View style={styles.headerCircle} />
+        <View style={styles.headerCircleSmall} />
+      </View>
+
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContent}>
+          <Text style={styles.pageTitle}>التحليلات</Text>
+          <Text style={styles.pageSubtitle}>نظرة شاملة على البيانات</Text>
+        </View>
+
+        {/* Custom Tab Bar */}
+        <View style={styles.tabBarContainer}>
+          <View style={styles.tabBar}>
+            {[
+              { id: 'predictions', label: 'التنبؤات' },
+              { id: 'risks', label: 'المخاطر' },
+              { id: 'overview', label: 'نظرة عامة' },
+            ].map((tab) => (
+              <TouchableOpacity
+                key={tab.id}
+                style={[
+                  styles.tabItem,
+                  selectedTab === tab.id && styles.tabItemActive
+                ]}
+                onPress={() => setSelectedTab(tab.id)}
+                activeOpacity={0.8}
+              >
+                <Text style={[
+                  styles.tabText,
+                  selectedTab === tab.id && styles.tabTextActive
+                ]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {renderTabContent()}
+          
+          <View style={styles.footerSpacing} />
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* Floating Action Button for Refresh */}
+      <Animated.View entering={SlideInRight.delay(500)} style={styles.fabContainer}>
         <TouchableOpacity
-          style={styles.refreshButton}
+          style={styles.fab}
           onPress={loadAnalytics}
           activeOpacity={0.8}
         >
-          <View style={styles.refreshButtonContent}>
-            <Text style={styles.refreshButtonText}>تحديث البيانات</Text>
-            <View style={styles.refreshIconContainer}>
-              <Ionicons name="refresh" size={20} color="#FFFFFF" />
-            </View>
-          </View>
+          <LinearGradient
+            colors={['#FF9800', '#F57C00']}
+            style={styles.fabGradient}
+          >
+            <Ionicons name="refresh" size={24} color="#FFF" />
+          </LinearGradient>
         </TouchableOpacity>
-      </ScrollView>
+      </Animated.View>
     </View>
   );
 }
@@ -370,538 +316,341 @@ export default function AnalyticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#F8F9FA',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
-  },
-  loadingIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+    backgroundColor: '#F8F9FA',
   },
   loadingText: {
-    color: '#1A1A1A',
+    marginTop: 15,
     fontSize: 16,
+    color: '#666',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
+  headerContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 220,
+    borderBottomLeftRadius: 35,
+    borderBottomRightRadius: 35,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    width: '100%',
+    height: '100%',
+  },
+  headerCircle: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  headerCircleSmall: {
+    position: 'absolute',
+    top: 50,
+    left: -30,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  headerContent: {
+    paddingHorizontal: 25,
+    paddingTop: 10,
+    paddingBottom: 20,
+    alignItems: 'flex-end',
+  },
+  pageTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#FFF',
+    marginBottom: 5,
+  },
+  pageSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
+  },
+  tabBarContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
+    borderRadius: 25,
+    padding: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  tabItem: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  tabItemActive: {
+    backgroundColor: '#FF9800',
+  },
+  tabText: {
+    fontSize: 14,
     fontWeight: '600',
-    textAlign: 'right',
+    color: '#888',
+  },
+  tabTextActive: {
+    color: '#FFF',
+    fontWeight: '700',
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 60,
-    paddingBottom: 120,
-  },
-  // Header
-  header: {
-    alignItems: 'center',
-    marginBottom: 25,
     paddingTop: 10,
   },
-  headerIconContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#FFF3E0',
+  gridContainer: {
+    marginBottom: 20,
+  },
+  gridRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  statCard: {
+    width: (width - 55) / 2,
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
+    alignItems: 'flex-end',
+  },
+  cardElevated: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    elevation: 6,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
-    borderWidth: 2,
-    borderColor: '#ffa500',
-    elevation: 4,
-    shadowColor: '#ffa500',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  statValue: {
+    fontSize: 26,
+    fontWeight: '800',
     color: '#1A1A1A',
-    marginBottom: 6,
-    textAlign: 'right',
+    marginBottom: 5,
   },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'right',
-    fontWeight: '500',
-  },
-  // Tabs
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 25,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 6,
-  },
-  tabActive: {
-    backgroundColor: '#ffa500',
-    elevation: 3,
-    shadowColor: '#ffa500',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  tabIcon: {
-    marginRight: 4,
-  },
-  tabText: {
-    color: '#888',
+  statLabel: {
     fontSize: 13,
+    color: '#666',
     fontWeight: '600',
   },
-  tabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+  sectionCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
   },
-  // Section Header
-  sectionHeader: {
-    flexDirection: 'row',
+  cardHeader: {
+    flexDirection: 'row-reverse',
     alignItems: 'center',
-    marginBottom: 18,
-    paddingHorizontal: 5,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    flex: 1,
-    textAlign: 'right',
-  },
-  sectionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
-  },
-  // Stats Grid
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-  statCard: {
-    width: (width - 50) / 2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 12,
-    alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  statCardOrange: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#ffa500',
-  },
-  statCardGreen: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#4caf50',
-  },
-  statCardRed: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#ff6b6b',
-  },
-  statCardBlue: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#0066CC',
-  },
-  statIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffa500',
-    marginBottom: 4,
-  },
-  statTitle: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  // Trends Card
-  trendsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 22,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  trendsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  trendsIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
-  },
-  trendsTitle: {
+  cardTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#1A1A1A',
-    textAlign: 'right',
   },
-  trendsDivider: {
-    height: 1,
-    backgroundColor: '#F0F0F0',
-    marginVertical: 18,
-  },
-  trendsContent: {
-    flexDirection: 'row',
+  trendInfo: {
+    flexDirection: 'row-reverse',
     justifyContent: 'space-around',
     alignItems: 'center',
+    marginBottom: 20,
   },
   trendItem: {
     alignItems: 'center',
-    flex: 1,
-  },
-  trendItemDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#E0E0E0',
   },
   trendValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 4,
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#333',
+    marginBottom: 5,
   },
   trendLabel: {
     fontSize: 13,
     color: '#888',
-    fontWeight: '500',
+  },
+  verticalDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#EEE',
   },
   trendBadgeContainer: {
-    alignItems: 'center',
-    marginTop: 18,
+    alignItems: 'flex-start',
   },
   trendBadge: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
     gap: 6,
   },
   trendBadgeText: {
-    color: '#0066CC',
     fontSize: 13,
     fontWeight: '600',
   },
-  // Empty State
   emptyState: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    alignItems: 'center',
     padding: 40,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  emptyIconContainer: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#E8F5E9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   emptyText: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  // Risk Card
-  riskCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  riskCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  riskCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  riskCardRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  riskCardTitle: {
+    marginTop: 15,
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginRight: 10,
+    color: '#888',
+    fontWeight: '500',
   },
-  riskIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
+  riskCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 15,
+  },
+  riskHeader: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 15,
   },
-  riskBadge: {
-    paddingHorizontal: 14,
+  riskTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  riskLevelBadge: {
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 10,
   },
-  riskBadgeText: {
-    color: '#FFFFFF',
+  riskLevelText: {
     fontSize: 12,
     fontWeight: '700',
   },
-  riskCardDivider: {
-    height: 1,
-    backgroundColor: '#F0F0F0',
-    marginVertical: 14,
+  riskDetails: {
+    flexDirection: 'row-reverse',
+    gap: 15,
   },
-  riskCardInfo: {
-    gap: 10,
-  },
-  riskInfoItem: {
-    flexDirection: 'row',
+  riskDetailItem: {
+    flexDirection: 'row-reverse',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 8,
+    gap: 6,
   },
-  riskInfoText: {
+  riskDetailText: {
     fontSize: 14,
     color: '#666',
-    fontWeight: '500',
   },
-  // Prediction Card
   predictionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    backgroundColor: '#FFF',
+    borderRadius: 24,
     padding: 20,
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    marginBottom: 15,
   },
   predictionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  predictionHeaderRight: {
-    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 20,
+  },
+  predictionTitleBox: {
+    alignItems: 'flex-end',
   },
   predictionTitle: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginRight: 10,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
   },
-  predictionIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFF3E0',
-    justifyContent: 'center',
+  predictionSubtitle: {
+    fontSize: 13,
+    color: '#888',
+  },
+  predictionScore: {
     alignItems: 'center',
-  },
-  predictionScoreContainer: {
-    backgroundColor: '#ffa500',
-    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: '#ffa500',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    borderRadius: 12,
   },
-  predictionScoreText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
+  scoreText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FF9800',
   },
-  progressBarContainer: {
-    width: '100%',
+  scoreLabel: {
+    fontSize: 10,
+    color: '#888',
+  },
+  progressContainer: {
     height: 8,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: '#F5F5F5',
     borderRadius: 4,
-    marginBottom: 18,
+    marginBottom: 20,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: '#ffa500',
     borderRadius: 4,
   },
-  predictionDetails: {
-    marginBottom: 16,
-  },
-  predictionDetailItem: {
+  recommendationBox: {
+    backgroundColor: '#FFF8E1',
+    padding: 15,
+    borderRadius: 16,
     alignItems: 'flex-end',
-    marginBottom: 12,
-  },
-  detailBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
-  },
-  detailBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  predictionInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 20,
-  },
-  predictionInfoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  predictionInfoText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
-  recommendationContainer: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-  },
-  recommendationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 10,
-    gap: 6,
-  },
-  recommendationTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0066CC',
   },
   recommendationText: {
     fontSize: 14,
-    color: '#444',
-    lineHeight: 22,
+    color: '#5D4037',
     textAlign: 'right',
+    lineHeight: 20,
   },
-  // Refresh Button
-  refreshButton: {
-    backgroundColor: '#ffa500',
-    borderRadius: 16,
-    padding: 18,
-    marginTop: 25,
-    elevation: 4,
-    shadowColor: '#ffa500',
-    shadowOffset: { width: 0, height: 4 },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+  },
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 15,
+    elevation: 8,
   },
-  refreshButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  refreshIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  fabGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
   },
-  refreshButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
+  footerSpacing: {
+    height: 80,
   },
 });
-
