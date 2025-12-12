@@ -161,7 +161,7 @@ export const getSettings = async () => {
       autoSendAlerts: true,
       detectionSensitivity: 'medium',
       enableNotifications: true,
-      backendUrl: 'http://172.20.10.4:3000',
+      backendUrl: 'http://172.20.10.2:3000',
     };
   } catch (error) {
     console.error('Error getting settings:', error);
@@ -170,7 +170,7 @@ export const getSettings = async () => {
       autoSendAlerts: true,
       detectionSensitivity: 'medium',
       enableNotifications: true,
-      backendUrl: 'http://172.20.10.4:3000',
+      backendUrl: 'http://172.20.10.2:3000',
     };
   }
 };

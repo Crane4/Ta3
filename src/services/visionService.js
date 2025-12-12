@@ -1,3 +1,5 @@
+import { checkPlateStatus, generateRandomPlate } from './stolenVehicles';
+
 // Motion history for tracking driving patterns
 let motionHistory = [];
 const MOTION_HISTORY_SIZE = 30;
@@ -22,18 +24,19 @@ export const initializeVision = async () => {
 };
 
 // Generate realistic vehicle position within detection zone
+// Modified to be more centered/stable as requested ("car by car", not random places)
 const generateRealisticVehiclePosition = () => {
-  const zoneWidth = 0.75; // 75% of screen width
-  const zoneHeight = 0.35; // 35% of screen height
-  const centerX = 0.5; // Center of screen
+  // Center of the zone (relative 0-1)
+  const centerX = 0.5; 
   const centerY = 0.5;
   
-  // Vehicle position as percentage of screen (will be converted to pixels in component)
+  // Minimal random variance to simulate slight movement/vibration
+  // but keeping it mostly centered to look like we are locking onto a vehicle
   return {
-    x: centerX + (Math.random() - 0.5) * zoneWidth * 0.8, // Within 80% of zone
-    y: centerY + (Math.random() - 0.5) * zoneHeight * 0.8,
-    width: 0.15 + Math.random() * 0.1, // 15-25% of screen width
-    height: 0.1 + Math.random() * 0.08, // 10-18% of screen height
+    x: centerX + (Math.random() - 0.5) * 0.1, // Very slight horizontal drift (+/- 5%)
+    y: centerY + (Math.random() - 0.5) * 0.1, // Very slight vertical drift
+    width: 0.25, // Fixed relative width (~25% of zone width)
+    height: 0.25, // Fixed relative height
   };
 };
 
@@ -127,6 +130,38 @@ export const detectDangerousBehavior = async (frame) => {
   }
 };
 
+// Detect license plates and check against stolen database
+export const detectLicensePlate = async (frame) => {
+  if (!visionInitialized) {
+    await initializeVision();
+  }
+
+  try {
+    // Simulate OCR delay and detection
+    // In production, this would use OCR model
+    
+    // 20% chance to detect a plate in a given frame check
+    if (Math.random() > 0.8) {
+      const plateNumber = generateRandomPlate();
+      const stolenInfo = checkPlateStatus(plateNumber);
+      
+      return {
+        detected: true,
+        plateNumber,
+        isStolen: !!stolenInfo,
+        vehicleInfo: stolenInfo, // Will be null if not stolen
+        confidence: 0.85 + Math.random() * 0.14, // 85-99% confidence
+        location: generateRealisticVehiclePosition(), // Where the plate was found
+      };
+    }
+
+    return { detected: false };
+  } catch (error) {
+    console.error('Error detecting license plate:', error);
+    return { detected: false };
+  }
+};
+
 // Analyze frame for accident indicators (smarter detection)
 const analyzeFrameForAccident = (frame) => {
   // Simulated analysis with improved logic
@@ -183,6 +218,33 @@ const detectLaneDeparture = (frame) => {
   return hasSustainedMovement && random > 0.94; // More selective
 };
 
+// Detect Vehicles (General Detection)
+// This simulates an object detection model (like YOLO) finding cars in the frame
+export const detectVehicles = async (frame) => {
+  if (!visionInitialized) {
+    await initializeVision();
+  }
+
+  // Simulate vehicle detection
+  // In a real app, this would return bounding boxes of all cars found
+  const vehicleCount = Math.floor(Math.random() * 3); // 0 to 2 vehicles per frame
+  const vehicles = [];
+
+  for (let i = 0; i < vehicleCount; i++) {
+    vehicles.push({
+      id: Date.now() + i,
+      location: generateRealisticVehiclePosition(),
+      type: 'vehicle',
+      confidence: 0.7 + Math.random() * 0.25
+    });
+  }
+
+  return {
+    detected: vehicles.length > 0,
+    vehicles: vehicles
+  };
+};
+
 // Detect abnormal stopping patterns
 const detectAbnormalStopping = (frame) => {
   // Simulated stopping detection
@@ -227,6 +289,35 @@ const analyzeDriverBehavior = (frame) => {
   }
 
   return { detected: false };
+};
+
+// Detect Fire
+export const detectFire = async (frame) => {
+  if (!visionInitialized) {
+    await initializeVision();
+  }
+
+  try {
+    // Simulated fire detection
+    // In production, this would use color segmentation (detecting orange/red/yellow regions)
+    // and dynamic texture analysis (flickering movement)
+    
+    // Rare event simulation
+    if (Math.random() > 0.99) { 
+       return {
+        detected: true,
+        type: 'fire',
+        message: 'تم اكتشاف حريق',
+        location: generateRealisticVehiclePosition(), // Reusing position generator for fire location
+        confidence: 0.90 + Math.random() * 0.09
+      };
+    }
+    
+    return { detected: false };
+  } catch (error) {
+    console.error('Error detecting fire:', error);
+    return { detected: false };
+  }
 };
 
 // Get motion history for analytics

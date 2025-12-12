@@ -54,7 +54,7 @@ const startHeartbeat = async (id) => {
 export const initSocket = async () => {
   try {
     const backendUrl = await AsyncStorage.getItem('backendUrl');
-    let url = backendUrl || 'http://172.20.10.4:3000';
+    let url = backendUrl || 'http://172.20.10.2:3000';
     
     // Ensure protocol exists
     if (!url.match(/^https?:\/\//)) {

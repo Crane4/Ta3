@@ -102,7 +102,7 @@ const sendToEmergencyAPI = async (alertData) => {
   try {
     // Get backend URL from settings
     const backendUrl = await AsyncStorage.getItem('backendUrl');
-    let apiUrl = backendUrl || 'http://172.20.10.4:3000'; // Default to localhost
+    let apiUrl = backendUrl || 'http://172.20.10.2:3000'; // Default to localhost
     
     // Check if using localhost on mobile device (won't work)
     if (apiUrl.includes('localhost') || apiUrl.includes('127.0.0.1')) {

@@ -30,7 +30,7 @@ export default function SettingsScreen() {
     autoSendAlerts: true,
     detectionSensitivity: 'medium',
     enableNotifications: true,
-    backendUrl: 'http://172.20.10.4:3000',
+    backendUrl: 'http://172.20.10.2:3000',
   });
   const [loading, setLoading] = useState(true);
 
